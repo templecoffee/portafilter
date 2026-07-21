@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>The Portafilter</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300&family=DM+Sans:wght@300;400;500&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg:       #0f0f0e;
+    --surface:  #181817;
+    --border:   #2a2a28;
+    --accent:   #c8f06e;
+    --accent2:  #f0c86e;
+    --text:     #e8e6e0;
+    --muted:    #6b6960;
+    --danger:   #f06e6e;
+    --radius:   4px;
+    --mono:     'DM Mono', monospace;
+    --sans:     'DM Sans', sans-serif;
+  }
+
+  html, body {
+    height: 100%;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    font-weight: 300;
+  }
+
+  body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 2rem;
+  }
+
+  /* Grain overlay */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 999;
+    opacity: 0.6;
+  }
+
+  .card {
+    width: 100%;
+    max-width: 560px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+
+  .card-header {
+    padding: 1.75rem 2rem 1.5rem;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+
+  .card-header-left { display: flex; flex-direction: column; gap: 0.25rem; }
+
+  .label-tag {
+    font-family: var(--mono);
+    font-size: 0.6rem;
+    font-weight: 500;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--accent);
+    background: color-mix(in srgb, var(--accent) 12%, transparent);
+    border: 1px solid color-mix(in srgb, var(--accent) 25%, transparent);
+    padding: 0.2em 0.6em;
+    border-radius: 2px;
+    display: inline-block;
+    width: fit-content;
+  }
+
+  h1 {
+    font-family: var(--mono);
+    font-size: 1.05rem;
+    font-weight: 400;
+    color: var(--text);
+    letter-spacing: -0.01em;
+  }
+
+  .subtitle {
+    font-size: 0.78rem;
+    color: var(--muted);
+    line-height: 1.5;
+    margin-top: 0.1rem;
+  }
+
+  .privacy-pill {
+    font-family: var(--mono);
+    font-size: 0.6rem;
+    color: var(--muted);
+    border: 1px solid var(--border);
+    padding: 0.3em 0.7em;
+    border-radius: 20px;
+    white-space: nowrap;
+    flex-shrink: 0;
+    margin-top: 0.2rem;
+  }
+
+  .privacy-pill::before {
+    content: '⬤ ';
+    color: var(--accent);
+    font-size: 0.45rem;
+    vertical-align: middle;
+    margin-right: 0.2em;
+  }
+
+  /* Drop zone */
+  .drop-zone {
+    margin: 1.75rem 2rem;
+    border: 1.5px dashed var(--border);
+    border-radius: var(--radius);
+    padding: 2.5rem 2rem;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+    position: relative;
+  }
+
+  .drop-zone:hover, .drop-zone.drag-over {
+    border-color: var(--accent);
+    background: color-mix(in srgb, var(--accent) 4%, transparent);
+  }
+
+  .drop-zone input[type="file"] {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    cursor: pointer;
+    width: 100%;
+    height: 100%;
+  }
+
+  .drop-icon {
+    font-size: 1.8rem;
+    margin-bottom: 0.75rem;
+    display: block;
+    filter: grayscale(0.4);
+  }
+
+  .drop-text {
+    font-family: var(--mono);
+    font-size: 0.78rem;
+    color: var(--muted);
+    line-height: 1.6;
+  }
+
+  .drop-text strong {
+    color: var(--text);
+    font-weight: 500;
+  }
+
+  .drop-text .ext {
+    color: var(--accent2);
+  }
+
+  /* State: file selected */
+  .file-selected {
+    margin: 0 2rem 0;
+    padding: 0.85rem 1rem;
+    background: color-mix(in srgb, var(--accent) 6%, transparent);
+    border: 1px solid color-mix(in srgb, var(--accent) 20%, transparent);
+    border-radius: var(--radius);
+    display: none;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .file-selected.visible { display: flex; }
+
+  .file-icon {
+    font-size: 1.1rem;
+    flex-shrink: 0;
+  }
+
+  .file-info { flex: 1; min-width: 0; }
+
+  .file-name {
+    font-family: var(--mono);
+    font-size: 0.78rem;
+    color: var(--accent);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .file-size {
+    font-family: var(--mono);
+    font-size: 0.65rem;
+    color: var(--muted);
+    margin-top: 0.15rem;
+  }
+
+  .clear-btn {
+    background: none;
+    border: none;
+    color: var(--muted);
+    cursor: pointer;
+    font-size: 1rem;
+    padding: 0.2rem;
+    line-height: 1;
+    flex-shrink: 0;
+    transition: color 0.15s;
+  }
+
+  .clear-btn:hover { color: var(--danger); }
+
+  .fields-section {
+    margin: 1.25rem 2rem 0;
+    display: none;
+  }
+
+  .fields-section.visible { display: block; }
+
+  .fields-label {
+    font-family: var(--mono);
+    font-size: 0.6rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 0.6rem;
+  }
+
+  .fields-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+  }
+
+  .field-item {
+    display: grid;
+    grid-template-columns: 10px 130px 1fr;
+    align-items: center;
+    gap: 0.5rem;
+    font-family: var(--mono);
+    font-size: 0.68rem;
+    color: var(--muted);
+    padding: 0.35rem 0.6rem;
+    border-radius: 4px;
+    transition: background 0.15s;
+  }
+
+  .field-item.found {
+    background: color-mix(in srgb, var(--accent) 5%, transparent);
+  }
+
+  .field-dot {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: var(--border);
+    flex-shrink: 0;
+    justify-self: center;
+    transition: background 0.2s;
+  }
+
+  .field-item.found .field-dot { background: var(--accent); }
+
+  .field-key {
+    color: var(--muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .field-item.found .field-key { color: var(--text); }
+
+  .field-value {
+    color: var(--accent2);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: 0.67rem;
+  }
+
+  .field-item:not(.found) .field-value {
+    color: var(--border);
+    font-style: italic;
+  }
+
+  /* Actions */
+  .actions {
+    padding: 1.5rem 2rem 2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin-top: 1.25rem;
+  }
+
+  .btn-convert {
+    width: 100%;
+    padding: 0.85rem 1.5rem;
+    background: var(--accent);
+    color: #0f0f0e;
+    border: none;
+    border-radius: var(--radius);
+    font-family: var(--mono);
+    font-size: 0.78rem;
+    font-weight: 500;
+    letter-spacing: 0.05em;
+    cursor: pointer;
+    transition: opacity 0.15s, transform 0.1s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .btn-convert:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  .btn-convert:not(:disabled):hover { opacity: 0.88; }
+  .btn-convert:not(:disabled):active { transform: scale(0.99); }
+
+  /* Status message */
+  .status {
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    text-align: center;
+    min-height: 1rem;
+    transition: color 0.2s;
+  }
+
+  .status.ok    { color: var(--accent); }
+  .status.err   { color: var(--danger); }
+  .status.info  { color: var(--muted); }
+
+  /* Footer */
+  .footer {
+    margin-top: 1.75rem;
+    font-family: var(--mono);
+    font-size: 0.6rem;
+    color: var(--muted);
+    text-align: center;
+    line-height: 1.8;
+  }
+
+  .footer a { color: var(--muted); text-decoration: underline; text-underline-offset: 3px; }
+
+  /* Shimmer on convert btn when processing */
+  @keyframes shimmer {
+    0%   { background-position: -200% center; }
+    100% { background-position: 200% center; }
+  }
+
+  .btn-convert.loading {
+    background: linear-gradient(90deg, var(--accent) 25%, color-mix(in srgb, var(--accent) 60%, white) 50%, var(--accent) 75%);
+    background-size: 200% auto;
+    animation: shimmer 1.2s linear infinite;
+  }
+</style>
+</head>
+<body>
+
+<div class="card">
+  <div class="card-header">
+    <div class="card-header-left">
+      <span class="label-tag">The Portafilter</span>
+      <h1>Infosheet → CSV</h1>
+      <p class="subtitle">Upload a coffee infosheet .xlsx and download<br>a formatted CSV for InDesign Data Merge.</p>
+    </div>
+    <span class="privacy-pill">local only</span>
+  </div>
+
+  <div class="drop-zone" id="dropZone">
+    <input type="file" id="fileInput" accept=".xlsx,.xls" />
+    <span class="drop-icon">📋</span>
+    <div class="drop-text">
+      <strong>Drop your infosheet here</strong><br>
+      or click to browse &nbsp;·&nbsp; <span class="ext">.xlsx / .xls</span>
+    </div>
+  </div>
+
+  <div class="file-selected" id="fileSelected">
+    <span class="file-icon">📄</span>
+    <div class="file-info">
+      <div class="file-name" id="fileName">—</div>
+      <div class="file-size" id="fileSize">—</div>
+    </div>
+    <button class="clear-btn" id="clearBtn" title="Remove file">✕</button>
+  </div>
+
+  <div class="fields-section" id="fieldsSection">
+    <div class="fields-label">Fields detected</div>
+    <div class="fields-grid" id="fieldsGrid"></div>
+  </div>
+
+  <div class="actions">
+    <button class="btn-convert" id="convertBtn" disabled>Convert to CSV</button>
+    <div class="status info" id="status">Select a file to begin</div>
+  </div>
+</div>
+
+<div class="footer">
+  Your file is never uploaded. All processing happens in your browser.<br>
+  <a href="https://github.com" target="_blank">Deploy to GitHub Pages</a> — no server required.
+</div>
+
+<script>
+// ─── FIELD MAP ────────────────────────────────────────────────────────────────
+// Left: label as it appears in column A of the sheet
+// Right: CSV column header (= InDesign merge field name)
+const FIELD_MAP = {
+  "COFFEE NAME":                                "coffee_name",
+  "PRONUNCIATION (non-phonemic)":               "pronunciation",
+  "COUNTRY":                                    "country",
+  "REGION":                                     "region",
+  "PRODUCER":                                   "producer",
+  "FARM":                                       "farm",
+  "PARTNERSHIP ESTABLISHED":                    "partnership_established",
+  "VARIETY":                                    "variety",
+  "ALTITUDE":                                   "altitude",
+  "PROCESS":                                    "process",
+  "BODY":                                       "body",
+  "FLAVOR":                                     "flavor",
+  "FINISH":                                     "finish",
+  "TASTING DESCRIPTION (460 character limit)":  "tasting_description",
+  "FARM INFO":                                  "farm_story",
+  "FACT 1":                                     "fact_1",
+  "FACT 2":                                     "fact_2",
+};
+
+// Extra fields extracted via special logic (shown in checklist + included in CSV)
+const EXTRA_FIELDS = ["retail_price_12oz"];
+// ─────────────────────────────────────────────────────────────────────────────
+
+const dropZone    = document.getElementById('dropZone');
+const fileInput   = document.getElementById('fileInput');
+const fileSelected= document.getElementById('fileSelected');
+const fileName    = document.getElementById('fileName');
+const fileSize    = document.getElementById('fileSize');
+const clearBtn    = document.getElementById('clearBtn');
+const convertBtn  = document.getElementById('convertBtn');
+const statusEl    = document.getElementById('status');
+const fieldsSection = document.getElementById('fieldsSection');
+const fieldsGrid  = document.getElementById('fieldsGrid');
+
+let currentFile = null;
+let parsedRecord = null;
+
+// Build field checklist UI
+const allCsvKeys = [...Object.values(FIELD_MAP), ...EXTRA_FIELDS];
+fieldsGrid.innerHTML = allCsvKeys.map(k =>
+  `<div class="field-item" id="fi-${k}">
+    <span class="field-dot"></span>
+    <span class="field-key">${k}</span>
+    <span class="field-value" id="fv-${k}">—</span>
+  </div>`
+).join('');
+
+function formatBytes(b) {
+  if (b < 1024) return b + ' B';
+  if (b < 1024 * 1024) return (b / 1024).toFixed(1) + ' KB';
+  return (b / (1024 * 1024)).toFixed(1) + ' MB';
+}
+
+function setStatus(msg, type = 'info') {
+  statusEl.textContent = msg;
+  statusEl.className = `status ${type}`;
+}
+
+function resetFieldDots() {
+  allCsvKeys.forEach(k => {
+    const el = document.getElementById(`fi-${k}`);
+    if (el) el.classList.remove('found');
+    const vEl = document.getElementById(`fv-${k}`);
+    if (vEl) vEl.textContent = '—';
+  });
+}
+
+function handleFile(file) {
+  if (!file) return;
+  if (!/\.(xlsx|xls)$/i.test(file.name)) {
+    setStatus('Please upload an .xlsx or .xls file.', 'err');
+    return;
+  }
+
+  currentFile = file;
+  fileName.textContent = file.name;
+  fileSize.textContent = formatBytes(file.size);
+  fileSelected.classList.add('visible');
+  dropZone.style.display = 'none';
+  fieldsSection.classList.add('visible');
+  resetFieldDots();
+  setStatus('Scanning sheet…', 'info');
+  convertBtn.disabled = true;
+
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try {
+      const data = new Uint8Array(e.target.result);
+      const wb = XLSX.read(data, { type: 'array' });
+      const ws = wb.Sheets[wb.SheetNames[0]];
+      const rows = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' });
+
+      const record = {};
+      for (const row of rows) {
+        const label = String(row[0] ?? '').trim();
+        if (!FIELD_MAP[label]) continue;
+        let value = '';
+        for (let col = 1; col < row.length; col++) {
+          const cell = String(row[col] ?? '').trim();
+          if (cell !== '') { value = cell; break; }
+        }
+        // Clean up literal \n escape sequences
+        record[FIELD_MAP[label]] = value
+          .replace(/\\n\\n/g, ' ')
+          .replace(/\\n/g, ' ')
+          .replace(/\s+/g, ' ')
+          .trim();
+      }
+
+      // ── Special extraction: 12oz Whole Bean retail price ──────────────────
+      // Scans the SKU table for a row where the SKU ends in "12WB",
+      // then grabs the RETAIL column value using the header row to find it.
+      let retailColIndex = -1;
+      let inSkuTable = false;
+      for (const row of rows) {
+        const cells = row.map(c => String(c ?? '').trim());
+
+        // Detect the SKU table header row by presence of both RETAIL and UNITS
+        const upperCells = cells.map(c => c.toUpperCase());
+        if (upperCells.includes('RETAIL') && upperCells.includes('UNITS')) {
+          retailColIndex = upperCells.indexOf('RETAIL');
+          inSkuTable = true;
+          continue;
+        }
+
+        if (inSkuTable && retailColIndex > -1) {
+          const sku = cells[0].toUpperCase();
+
+          // Stop scanning if we've left the SKU table
+          if (cells[0] === '' || sku === 'NAN' || sku.includes('TASTING') || sku.includes('BODY')) break;
+
+          const isWB12 = sku.endsWith('12WB');
+          if (isWB12) {
+            const price = cells[retailColIndex];
+            if (price && price !== '' && price !== 'nan' && price !== 'NAN' && price !== '-') {
+              const num = parseFloat(price);
+              record['retail_price_12oz'] = isNaN(num) ? price : '$' + num.toFixed(2);
+            }
+            break;
+          }
+        }
+      }
+      // ──────────────────────────────────────────────────────────────────────
+
+      parsedRecord = record;
+
+      // Update field dots
+      let found = 0;
+      const allKeys = [...Object.values(FIELD_MAP), ...EXTRA_FIELDS];
+      for (const csvKey of allKeys) {
+        const value = record[csvKey];
+        if (value !== undefined && value !== '') {
+          const el = document.getElementById(`fi-${csvKey}`);
+          if (el) el.classList.add('found');
+          const vEl = document.getElementById(`fv-${csvKey}`);
+          if (vEl) {
+            const preview = value.length > 38 ? value.slice(0, 38) + '…' : value;
+            vEl.textContent = preview;
+          }
+          found++;
+        }
+      }
+
+      const total = allKeys.length;
+      if (found === 0) {
+        setStatus('No matching fields found. Check your sheet labels.', 'err');
+      } else {
+        setStatus(`${found} of ${total} fields found`, found === total ? 'ok' : 'info');
+        convertBtn.disabled = false;
+      }
+    } catch (err) {
+      setStatus('Could not read file: ' + err.message, 'err');
+    }
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function clearFile() {
+  currentFile = null;
+  parsedRecord = null;
+  fileInput.value = '';
+  fileSelected.classList.remove('visible');
+  fieldsSection.classList.remove('visible');
+  dropZone.style.display = '';
+  convertBtn.disabled = true;
+  convertBtn.classList.remove('loading');
+  resetFieldDots();
+  setStatus('Select a file to begin', 'info');
+}
+
+function toUTF16LE(str) {
+  // BOM for UTF-16 LE, then encode each character as 2 bytes little-endian
+  const buf = new ArrayBuffer(2 + str.length * 2);
+  const view = new DataView(buf);
+  view.setUint8(0, 0xFF);
+  view.setUint8(1, 0xFE);
+  for (let i = 0; i < str.length; i++) {
+    view.setUint16(2 + i * 2, str.charCodeAt(i), true);
+  }
+  return buf;
+}
+
+function downloadCSV() {
+  if (!parsedRecord) return;
+
+  convertBtn.classList.add('loading');
+  convertBtn.disabled = true;
+  setStatus('Generating CSV…', 'info');
+
+  setTimeout(() => {
+    try {
+      const headers = [...Object.values(FIELD_MAP), ...EXTRA_FIELDS];
+      const escape = (v) => `"${String(v ?? '').replace(/"/g, '""')}"`;
+      const headerRow = headers.map(escape).join(',');
+      const dataRow   = headers.map(h => escape(parsedRecord[h] ?? '')).join(',');
+      const csv = `${headerRow}\n${dataRow}\n`;
+
+      // Encode as UTF-16 LE with BOM so InDesign handles smart quotes
+      // and other special characters correctly on import
+      const utf16 = toUTF16LE(csv);
+      const blob = new Blob([utf16], { type: 'text/csv;charset=utf-16;' });
+      const url  = URL.createObjectURL(blob);
+      const a    = document.createElement('a');
+      const baseName = (currentFile?.name || 'infosheet').replace(/\.(xlsx|xls)$/i, '');
+      a.href     = url;
+      a.download = `${baseName}_indesign.csv`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      setStatus('CSV downloaded ✓', 'ok');
+    } catch (err) {
+      setStatus('Export failed: ' + err.message, 'err');
+    } finally {
+      convertBtn.classList.remove('loading');
+      convertBtn.disabled = false;
+    }
+  }, 200);
+}
+
+// ─── Events ───────────────────────────────────────────────────────────────────
+fileInput.addEventListener('change', (e) => handleFile(e.target.files[0]));
+clearBtn.addEventListener('click', clearFile);
+convertBtn.addEventListener('click', downloadCSV);
+
+dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+dropZone.addEventListener('drop', (e) => {
+  e.preventDefault();
+  dropZone.classList.remove('drag-over');
+  handleFile(e.dataTransfer.files[0]);
+});
+</script>
+</body>
+</html>
