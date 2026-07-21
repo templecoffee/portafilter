@@ -3,9 +3,9 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>PORTAFILTER — Temple Coffee</title>
-<link rel="icon" type="image/png" href="favicon.png">
-<link rel="apple-touch-icon" href="favicon.png">
+<title>PORTAFILTER — Google Sheet to InDesign</title>
+<link rel="icon" type="image/png" href="/favicon.png">
+<link rel="apple-touch-icon" href="/favicon.png">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
   @font-face {
@@ -68,8 +68,15 @@
     color: #fff;
     padding: 14px 20px;
     display: flex;
-    align-items: baseline;
+    align-items: center;
     justify-content: space-between;
+    gap: 14px;
+    flex-wrap: wrap;
+  }
+
+  header .header-left {
+    display: flex;
+    align-items: baseline;
     gap: 14px;
     flex-wrap: wrap;
   }
@@ -89,6 +96,34 @@
     color: #999;
     letter-spacing: 1px;
     text-transform: uppercase;
+  }
+
+  .header-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .header-btn {
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 10px;
+    font-weight: bold;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: #fff;
+    background: transparent;
+    border: 1px solid #555;
+    padding: 0.55em 0.9em;
+    cursor: pointer;
+    text-decoration: none;
+    white-space: nowrap;
+    transition: background 0.15s, border-color 0.15s;
+  }
+
+  .header-btn:hover {
+    background: #fff;
+    color: #000;
+    border-color: #fff;
   }
 
   .content {
@@ -120,27 +155,13 @@
 
   .card-header-left { display: flex; flex-direction: column; gap: 0.25rem; }
 
-  .label-tag {
-    font-family: var(--mono);
-    font-size: 0.6rem;
-    font-weight: 500;
-    letter-spacing: 0.15em;
-    text-transform: uppercase;
-    color: var(--accent);
-    background: color-mix(in srgb, var(--accent) 12%, transparent);
-    border: 1px solid color-mix(in srgb, var(--accent) 25%, transparent);
-    padding: 0.2em 0.6em;
-    border-radius: 2px;
-    display: inline-block;
-    width: fit-content;
-  }
-
-  .card-header-left h2 {
-    font-family: var(--mono);
+  .card-title {
+    font-family: Arial, Helvetica, sans-serif;
     font-size: 1.05rem;
-    font-weight: 400;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
     color: var(--text);
-    letter-spacing: -0.01em;
   }
 
   .subtitle {
@@ -184,7 +205,13 @@
 
   .drop-zone:hover, .drop-zone.drag-over {
     border-color: var(--accent);
-    background: color-mix(in srgb, var(--accent) 4%, transparent);
+    border-style: solid;
+    background: color-mix(in srgb, var(--accent) 6%, transparent);
+  }
+
+  .drop-zone:hover .browse-btn {
+    background: var(--accent);
+    color: #fff;
   }
 
   .drop-zone input[type="file"] {
@@ -217,6 +244,22 @@
 
   .drop-text .ext {
     color: var(--accent2);
+  }
+
+  .browse-btn {
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 10px;
+    font-weight: bold;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--text);
+    background: transparent;
+    border: 1px solid var(--border);
+    padding: 0.55em 1.1em;
+    margin-top: 1rem;
+    display: inline-block;
+    pointer-events: none;
+    transition: background 0.15s, color 0.15s;
   }
 
   /* State: file selected */
@@ -415,13 +458,96 @@
     background-size: 200% auto;
     animation: shimmer 1.2s linear infinite;
   }
+
+  /* Modal */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.6);
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    z-index: 100;
+  }
+
+  .modal-overlay.visible { display: flex; }
+
+  .modal {
+    width: 100%;
+    max-width: 520px;
+    max-height: 85vh;
+    overflow-y: auto;
+    background: var(--surface);
+    border: 1px solid var(--border);
+  }
+
+  .modal-header {
+    padding: 1.25rem 1.5rem;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+
+  .modal-header h3 {
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 0.95rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  .modal-close {
+    background: none;
+    border: none;
+    font-size: 1rem;
+    cursor: pointer;
+    color: var(--muted);
+    padding: 0.2rem;
+    line-height: 1;
+    transition: color 0.15s;
+  }
+
+  .modal-close:hover { color: var(--danger); }
+
+  .sop-steps {
+    padding: 1.5rem 1.5rem 1.75rem 2.75rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+  }
+
+  .sop-steps li {
+    font-family: var(--mono);
+    font-size: 0.8rem;
+    line-height: 1.5;
+    color: var(--text);
+  }
+
+  .sop-steps li strong {
+    font-weight: 700;
+  }
+
+  .sop-steps li::marker {
+    font-family: Arial, Helvetica, sans-serif;
+    font-weight: 700;
+    color: var(--accent);
+  }
 </style>
 </head>
 <body>
 
 <header>
-  <h1>Portafilter</h1>
-  <span class="sub">Infosheet &rarr; CSV for InDesign Data Merge</span>
+  <div class="header-left">
+    <h1>Portafilter</h1>
+    <span class="sub">Infosheet &rarr; CSV for InDesign Data Merge</span>
+  </div>
+  <div class="header-actions">
+    <button class="header-btn" id="sopBtn" type="button">How to Use</button>
+    <a class="header-btn" href="PF_WholesaleInfoSheet.indd" download>Download Template</a>
+  </div>
 </header>
 
 <div class="content">
@@ -429,8 +555,7 @@
 <div class="card">
   <div class="card-header">
     <div class="card-header-left">
-      <span class="label-tag">The Portafilter</span>
-      <h2>Infosheet → CSV</h2>
+      <h2 class="card-title">Infosheet to CSV</h2>
       <p class="subtitle">Upload a coffee infosheet .xlsx and download<br>a formatted CSV for InDesign Data Merge.</p>
     </div>
     <span class="privacy-pill">local only</span>
@@ -443,6 +568,7 @@
       <strong>Drop your infosheet here</strong><br>
       or click to browse &nbsp;·&nbsp; <span class="ext">.xlsx / .xls</span>
     </div>
+    <span class="browse-btn">Choose File</span>
   </div>
 
   <div class="file-selected" id="fileSelected">
@@ -466,10 +592,28 @@
 </div>
 
 <div class="footer">
-  Your file is never uploaded. All processing happens in your browser.<br>
-  <a href="https://github.com" target="_blank">Deploy to GitHub Pages</a> — no server required.
+  Your file is never uploaded. All processing happens in your browser.
 </div>
 
+</div>
+
+<div class="modal-overlay" id="sopModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>Data Merge SOP</h3>
+      <button class="modal-close" id="sopClose" title="Close">✕</button>
+    </div>
+    <ol class="sop-steps">
+      <li>Open <strong>PF_WholesaleInfoSheet.indd</strong></li>
+      <li>Window → Utilities → Data Merge</li>
+      <li>Click the hamburger menu → Select Data Source</li>
+      <li>Select your converted CSV</li>
+      <li>Hamburger menu → Create Merged Document</li>
+      <li>Adjust any errors</li>
+      <li>Add photos</li>
+      <li>Add or edit the Farm Story if not added or needs to be shorter</li>
+    </ol>
+  </div>
 </div>
 
 <script>
@@ -730,6 +874,19 @@ dropZone.addEventListener('drop', (e) => {
   dropZone.classList.remove('drag-over');
   handleFile(e.dataTransfer.files[0]);
 });
+
+// ─── SOP Modal ─────────────────────────────────────────────────────────────
+const sopBtn   = document.getElementById('sopBtn');
+const sopModal = document.getElementById('sopModal');
+const sopClose = document.getElementById('sopClose');
+
+function openSop()  { sopModal.classList.add('visible'); }
+function closeSop() { sopModal.classList.remove('visible'); }
+
+sopBtn.addEventListener('click', openSop);
+sopClose.addEventListener('click', closeSop);
+sopModal.addEventListener('click', (e) => { if (e.target === sopModal) closeSop(); });
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeSop(); });
 </script>
 </body>
 </html>
