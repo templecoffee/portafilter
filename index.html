@@ -3,25 +3,50 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>The Portafilter</title>
+<title>PORTAFILTER — Temple Coffee</title>
+<link rel="icon" type="image/png" href="/favicon.png">
+<link rel="apple-touch-icon" href="/favicon.png">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300&family=DM+Sans:wght@300;400;500&display=swap');
+  @font-face {
+    font-family: 'TradeGothic';
+    src: local('Trade Gothic LT Std'), local('TradeGothicLTStd'), local('Trade Gothic LT Std Roman'),
+         url('https://cdn.shopify.com/s/files/1/0084/0826/8890/files/TradeGothicLTStd.woff2?v=1780693074') format('woff2');
+    font-weight: 400; font-style: normal; font-display: swap;
+  }
+  @font-face {
+    font-family: 'TradeGothicExtBd';
+    src: local('TradeGothicLTStd-BoldExt'), local('Trade Gothic LT Std Bold Extended'),
+         url('https://cdn.shopify.com/s/files/1/0084/0826/8890/files/TradeGothicLTStd-BoldExt.woff2?v=1780693074') format('woff2');
+    font-weight: 700; font-style: normal; font-display: swap;
+  }
+  @font-face {
+    font-family: 'TradeGothicExt';
+    src: local('TradeGothicLTStd-Extended'), local('Trade Gothic LT Std Extended'),
+         url('https://cdn.shopify.com/s/files/1/0084/0826/8890/files/TradeGothicLTStd-Extended.woff2?v=1780693074') format('woff2');
+    font-weight: 400; font-style: normal; font-display: swap;
+  }
+  @font-face {
+    font-family: 'TradeGothicBd2';
+    src: local('TradeGothicLTStd-Bd2'), local('Trade Gothic LT Std Bold No 2'),
+         url('https://cdn.shopify.com/s/files/1/0084/0826/8890/files/TradeGothicLTStd-Bd2.woff2?v=1780693074') format('woff2');
+    font-weight: 700; font-style: normal; font-display: swap;
+  }
 
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; border-radius: 0 !important; box-shadow: none !important; }
 
   :root {
-    --bg:       #0f0f0e;
-    --surface:  #181817;
-    --border:   #2a2a28;
-    --accent:   #c8f06e;
-    --accent2:  #f0c86e;
-    --text:     #e8e6e0;
-    --muted:    #6b6960;
-    --danger:   #f06e6e;
-    --radius:   4px;
-    --mono:     'DM Mono', monospace;
-    --sans:     'DM Sans', sans-serif;
+    --bg:       #ffffff;
+    --surface:  #ffffff;
+    --border:   #000000;
+    --accent:   #000000;
+    --accent2:  #666666;
+    --text:     #000000;
+    --muted:    #666666;
+    --danger:   #a40000;
+    --radius:   0px;
+    --mono:     Arial, Helvetica, sans-serif;
+    --sans:     Arial, Helvetica, sans-serif;
   }
 
   html, body {
@@ -29,27 +54,50 @@
     background: var(--bg);
     color: var(--text);
     font-family: var(--sans);
-    font-weight: 300;
+    font-weight: 400;
   }
 
   body {
     display: flex;
     flex-direction: column;
-    align-items: center;
-    justify-content: center;
     min-height: 100vh;
-    padding: 2rem;
   }
 
-  /* Grain overlay */
-  body::before {
-    content: '';
-    position: fixed;
-    inset: 0;
-    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
-    pointer-events: none;
-    z-index: 999;
-    opacity: 0.6;
+  header {
+    background: #000;
+    color: #fff;
+    padding: 14px 20px;
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 14px;
+    flex-wrap: wrap;
+  }
+
+  header h1 {
+    font-family: 'TradeGothicExtBd', Arial, sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: #fff;
+  }
+
+  header .sub {
+    font-family: 'TradeGothic', Arial, sans-serif;
+    font-size: 11px;
+    color: #999;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+
+  .content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
   }
 
   .card {
@@ -87,7 +135,7 @@
     width: fit-content;
   }
 
-  h1 {
+  .card-header-left h2 {
     font-family: var(--mono);
     font-size: 1.05rem;
     font-weight: 400;
@@ -152,7 +200,7 @@
     font-size: 1.8rem;
     margin-bottom: 0.75rem;
     display: block;
-    filter: grayscale(0.4);
+    filter: grayscale(1);
   }
 
   .drop-text {
@@ -188,6 +236,7 @@
   .file-icon {
     font-size: 1.1rem;
     flex-shrink: 0;
+    filter: grayscale(1);
   }
 
   .file-info { flex: 1; min-width: 0; }
@@ -308,13 +357,13 @@
     width: 100%;
     padding: 0.85rem 1.5rem;
     background: var(--accent);
-    color: #0f0f0e;
-    border: none;
-    border-radius: var(--radius);
-    font-family: var(--mono);
-    font-size: 0.78rem;
-    font-weight: 500;
-    letter-spacing: 0.05em;
+    color: #ffffff;
+    border: 1px solid var(--accent);
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 11px;
+    font-weight: bold;
+    letter-spacing: 1px;
+    text-transform: uppercase;
     cursor: pointer;
     transition: opacity 0.15s, transform 0.1s;
     position: relative;
@@ -370,11 +419,18 @@
 </head>
 <body>
 
+<header>
+  <h1>Portafilter</h1>
+  <span class="sub">Infosheet &rarr; CSV for InDesign Data Merge</span>
+</header>
+
+<div class="content">
+
 <div class="card">
   <div class="card-header">
     <div class="card-header-left">
       <span class="label-tag">The Portafilter</span>
-      <h1>Infosheet → CSV</h1>
+      <h2>Infosheet → CSV</h2>
       <p class="subtitle">Upload a coffee infosheet .xlsx and download<br>a formatted CSV for InDesign Data Merge.</p>
     </div>
     <span class="privacy-pill">local only</span>
@@ -412,6 +468,8 @@
 <div class="footer">
   Your file is never uploaded. All processing happens in your browser.<br>
   <a href="https://github.com" target="_blank">Deploy to GitHub Pages</a> — no server required.
+</div>
+
 </div>
 
 <script>
